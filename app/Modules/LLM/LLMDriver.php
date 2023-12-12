@@ -6,7 +6,7 @@ use App\Modules\DTO\AnalysisResult;
 
 abstract readonly class LLMDriver
 {
-    const string PROMPT = '
+    const PROMPT = '
         I am doing an experiment and want to try to analyse images and guess the amount of calories, proteins, carbs and fats in the image.
         Analyse the image attached and return the information in a JSON format for example:
         {
