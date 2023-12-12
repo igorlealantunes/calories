@@ -16,21 +16,31 @@ class TwilioWebhookController extends Controller
     {
         Log::info(json_encode($request->all()));
 
-        if ($mediaUrl = $request->input('MediaUrl0')) {
-            $this->saveImage($mediaUrl, $request->input('WaId', 'other'));
+        try {
+            if ($mediaUrl = $request->input('MediaUrl0')) {
+                $this->saveImage($mediaUrl, $request->input('WaId', 'other'));
+                $calories = $driver->getCaloriesFromImage($mediaUrl);
+            } else if ($message = $request->input('Body')) {
+                $calories = $driver->getCaloriesFromDescription($message);
+            }
+
+            $returnMessage = $calories->toString();
+        } catch (Throwable $th) {
+            Log::error($th->getMessage());
+
+            if (empty($mediaUrl)) {
+                $returnMessage = 'Invalid image. Please send a valid image.';
+            } else if (empty($message)) {
+                $returnMessage = 'Invalid message. Please send a valid message.';
+            } else {
+                $returnMessage = 'Something went wrong. Please try again later.';
+            }
         }
 
         header("content-type: text/xml");
 
         $response = new MessagingResponse();
-
-        try {
-            $calories = $driver->getCalories($mediaUrl);
-            $response->message($calories->toString());
-        } catch (Throwable $th) {
-            Log::error($th->getMessage());
-            $response->message("Imagem ruim da gota, manda ota"); // TODO: improve lol
-        }
+        $response->message($returnMessage);
 
         return $response;
     }
